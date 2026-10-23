@@ -53,3 +53,30 @@ change back, revert the commit and push again — Pages redeploys the old output
 - Apex: `A` records to GitHub Pages' four IPs
 - `www`: `CNAME` to `harrycarter1998.github.io`
 - Enforce HTTPS in the repository's Pages settings after the certificate issues
+
+### DNS credentials
+
+`scripts/configure-dns.mjs` manages the apex and `www` address records through
+the Porkbun API. It never touches MX, TXT, SRV or NS records, so Porkbun email
+forwarding keeps working.
+
+Enter the keys once, without editing a file by hand:
+
+```sh
+node scripts/configure-dns.mjs --credentials
+```
+
+They are validated against Porkbun before anything is saved, then written to
+`.env` in this checkout (mode 600, gitignored). Add `--global` to store them in
+`~/.config/contested-realms/porkbun.env` instead. Read order is
+`$PORKBUN_ENV`, `./.env`, then the global file.
+
+The script refuses to run if the file it would use is tracked by git — this
+repository is public, and the key is account-wide.
+
+Then:
+
+```sh
+node scripts/configure-dns.mjs            # dry run, prints the plan
+node scripts/configure-dns.mjs --apply    # writes the records
+```

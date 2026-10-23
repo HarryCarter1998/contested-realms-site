@@ -17,6 +17,8 @@ Actions to GitHub Pages on push to `main`.
   or none.
 - **`public/CNAME` must contain `contestedrealms.com`.** Deleting it unhooks the
   custom domain.
+- **This repository is public.** Never commit `.env`, `*.env`, or anything from
+  `~/.config/contested-realms/`. The Porkbun key is account-wide.
 
 ## Checks before pushing
 

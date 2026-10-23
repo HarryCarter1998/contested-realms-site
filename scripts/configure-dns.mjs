@@ -12,9 +12,10 @@
  * Only apex and www address records are managed. MX, TXT, SRV and NS records
  * are never touched, so Porkbun email forwarding keeps working.
  */
-import { readFileSync } from 'node:fs';
+import { readFileSync, mkdirSync, writeFileSync, existsSync } from 'node:fs';
 import { homedir } from 'node:os';
-import { join } from 'node:path';
+import { dirname, join } from 'node:path';
+import { execFileSync } from 'node:child_process';
 
 const DOMAIN = 'contestedrealms.com';
 const API = 'https://api.porkbun.com/api/json/v3';
@@ -33,12 +34,144 @@ const WWW_TARGET = 'harrycarter1998.github.io';
 const MANAGED_NAMES = new Set(['', 'www']);
 const ADDRESS_TYPES = new Set(['A', 'AAAA', 'CNAME', 'ALIAS']);
 
-const CREDENTIALS_FILE = join(homedir(), '.config', 'contested-realms', 'porkbun.env');
+const CONFIG_FILE = join(homedir(), '.config', 'contested-realms', 'porkbun.env');
+const LOCAL_FILE = join(process.cwd(), '.env');
+
+/**
+ * Where keys are read from, in order:
+ *   1. $PORKBUN_ENV
+ *   2. ./.env in the site checkout (the familiar place)
+ *   3. ~/.config/contested-realms/porkbun.env
+ */
+function credentialsFile() {
+  if (process.env.PORKBUN_ENV) return process.env.PORKBUN_ENV;
+  if (existsSync(LOCAL_FILE)) return LOCAL_FILE;
+  return CONFIG_FILE;
+}
+
+/** A keys file that git tracks in a public repo is a leak waiting to happen. */
+function assertNotTracked(file) {
+  try {
+    const tracked = execFileSync('git', ['ls-files', '--', file], {
+      cwd: dirname(file),
+      encoding: 'utf8',
+      stdio: ['ignore', 'pipe', 'ignore'],
+    }).trim();
+    if (tracked) {
+      throw new Error(
+        `${file} is tracked by git. It must be ignored before it can hold keys.\n` +
+          'Add it to .gitignore and run: git rm --cached ' + file,
+      );
+    }
+  } catch (error) {
+    if (error.message.includes('tracked by git')) throw error;
+    // git is unavailable or this is not a repository; nothing to check.
+  }
+}
+
+/** Read one line from the terminal without echoing it. */
+function promptHidden(question) {
+  return new Promise((resolve, reject) => {
+    const { stdin, stdout } = process;
+    if (!stdin.isTTY) {
+      reject(
+        new Error(
+          'No interactive terminal. Run this command directly in a terminal window.',
+        ),
+      );
+      return;
+    }
+
+    stdout.write(question);
+    stdin.setRawMode(true);
+    stdin.resume();
+    stdin.setEncoding('utf8');
+
+    let value = '';
+
+    const finish = (result) => {
+      stdin.setRawMode(false);
+      stdin.pause();
+      stdin.removeListener('data', onData);
+      stdout.write('\n');
+      resolve(result);
+    };
+
+    const onData = (chunk) => {
+      for (const char of chunk) {
+        if (char === '\r' || char === '\n' || char === '\u0004') {
+          finish(value);
+          return;
+        }
+        if (char === '\u0003') {
+          stdin.setRawMode(false);
+          stdin.pause();
+          stdout.write('\n');
+          process.exit(1);
+        }
+        if (char === '\u007f' || char === '\b') {
+          value = value.slice(0, -1);
+          continue;
+        }
+        value += char;
+      }
+    };
+
+    stdin.on('data', onData);
+  });
+}
+
+async function setupCredentials() {
+  const target = process.argv.includes('--global') ? CONFIG_FILE : LOCAL_FILE;
+  assertNotTracked(target);
+
+  console.log(
+    'Paste each key from https://porkbun.com/account/api (nothing is echoed or saved in shell history).\n',
+  );
+
+  const apikey = (await promptHidden('API Key: ')).trim().replace(/\s+/g, '');
+  const secretapikey = (await promptHidden('Secret API Key: ')).trim().replace(/\s+/g, '');
+
+  if (!apikey || !secretapikey) {
+    throw new Error('Both values are required. Nothing was saved.');
+  }
+
+  const response = await fetch(`${API}/ping`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ apikey, secretapikey }),
+  });
+  const json = await response.json();
+  if (json.status !== 'SUCCESS') {
+    throw new Error(
+      `Porkbun rejected those credentials: ${json.message ?? JSON.stringify(json)}. Nothing was saved.`,
+    );
+  }
+
+  mkdirSync(dirname(target), { recursive: true, mode: 0o700 });
+  writeFileSync(
+    target,
+    [
+      '# Porkbun API credentials for scripts/configure-dns.mjs',
+      '# Never commit this file. This repository is public.',
+      '# Keys are account-wide; revoke them at https://porkbun.com/account/api',
+      `PORKBUN_API_KEY=${apikey}`,
+      `PORKBUN_SECRET_API_KEY=${secretapikey}`,
+      '',
+    ].join('\n'),
+    { mode: 0o600 },
+  );
+
+  console.log(`Saved to ${target} (mode 600). Credentials accepted by Porkbun.\n`);
+}
 
 function loadCredentials() {
+  const file = credentialsFile();
+  assertNotTracked(file);
+
   const env = { ...process.env };
   try {
-    for (const line of readFileSync(CREDENTIALS_FILE, 'utf8').split('\n')) {
+    for (const line of readFileSync(file, 'utf8').split('\n')) {
       const match = line.match(/^\s*([A-Z_]+)\s*=\s*(.*?)\s*$/);
       if (match && !env[match[1]]) {
         env[match[1]] = match[2].replace(/^["']|["']$/g, '');
@@ -52,8 +185,8 @@ function loadCredentials() {
   const missing = required.filter((name) => !env[name] || env[name].startsWith('PASTE_'));
   if (missing.length > 0) {
     throw new Error(
-      `${missing.join(' and ')} ${missing.length > 1 ? 'are' : 'is'} not set in ${CREDENTIALS_FILE}.\n` +
-        'Porkbun needs both values: the API Key and the Secret API Key.',
+      `${missing.join(' and ')} ${missing.length > 1 ? 'are' : 'is'} not set in ${file}.\n` +
+        'Run `node scripts/configure-dns.mjs --credentials` to enter them without editing a file.',
     );
   }
 
@@ -72,6 +205,11 @@ const wantedKeys = new Set(wanted.map(key));
 
 async function main() {
   const apply = process.argv.includes('--apply');
+
+  if (process.argv.includes('--credentials')) {
+    await setupCredentials();
+  }
+
   const credentials = loadCredentials();
 
   const call = async (path, body = {}) => {
