@@ -1,0 +1,107 @@
+---
+import { site } from '../config/site';
+
+const path = Astro.url.pathname;
+const isHome = path === '/';
+---
+
+<header class="site-nav">
+  <div class="container site-nav__inner">
+    <a class="brand" href="/" aria-label={`${site.name} home`}>
+      <span class="brand__mark" aria-hidden="true"></span>
+      <span class="brand__name">{site.name}</span>
+    </a>
+
+    <nav class="site-nav__links" aria-label="Main">
+      {isHome ? (
+        <>
+          <a href="#features" class="nav-link nav-link--secondary">Features</a>
+          <a href="#play" class="nav-link nav-link--secondary">How to play</a>
+        </>
+      ) : (
+        <a href="/#features" class="nav-link nav-link--secondary">Features</a>
+      )}
+      <a href="/news/" class="nav-link">News</a>
+      {site.discordInvite && (
+        <a href={site.discordInvite} class="btn btn--primary site-nav__cta" rel="noopener">Join Discord</a>
+      )}
+    </nav>
+  </div>
+</header>
+
+<style>
+  .site-nav {
+    position: sticky;
+    top: 0;
+    z-index: 50;
+    background: rgba(12, 8, 6, 0.82);
+    backdrop-filter: blur(12px);
+    border-bottom: 1px solid var(--hairline);
+  }
+
+  .site-nav__inner {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1.5rem;
+    height: 68px;
+  }
+
+  .brand {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.65rem;
+    text-decoration: none;
+    color: var(--text);
+  }
+
+  .brand__mark {
+    width: 26px;
+    height: 30px;
+    background: linear-gradient(180deg, var(--gold-bright), var(--gold));
+    clip-path: polygon(50% 0%, 100% 12%, 100% 55%, 50% 100%, 0% 55%, 0% 12%);
+    box-shadow: 0 0 18px -6px var(--gold);
+  }
+
+  .brand__name {
+    font-family: var(--font-display);
+    font-size: 1rem;
+    font-weight: 600;
+    letter-spacing: 0.06em;
+    white-space: nowrap;
+  }
+
+  .site-nav__links {
+    display: flex;
+    align-items: center;
+    gap: 1.5rem;
+  }
+
+  .nav-link {
+    font-size: 0.86rem;
+    font-weight: 500;
+    letter-spacing: 0.04em;
+    color: var(--text-muted);
+    text-decoration: none;
+    transition: color 160ms ease;
+  }
+
+  .nav-link:hover {
+    color: var(--gold-bright);
+  }
+
+  .site-nav__cta {
+    padding: 0.55rem 1.1rem;
+    font-size: 0.84rem;
+  }
+
+  @media (max-width: 720px) {
+    .nav-link--secondary {
+      display: none;
+    }
+
+    .site-nav__inner {
+      height: 60px;
+    }
+  }
+</style>

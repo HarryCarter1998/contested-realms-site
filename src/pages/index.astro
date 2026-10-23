@@ -1,0 +1,261 @@
+---
+import { getCollection } from 'astro:content';
+import Base from '../layouts/Base.astro';
+import Crest from '../components/Crest.astro';
+import Icon from '../components/Icon.astro';
+import { site } from '../config/site';
+
+const posts = (await getCollection('news', ({ data }) => !data.draft))
+  .sort((a, b) => b.data.date.valueOf() - a.data.date.valueOf())
+  .slice(0, 3);
+
+const features = [
+  {
+    icon: 'keep',
+    title: 'Strongholds',
+    body: 'One keep per clan, placed where it counts. Lose it and you lose the ground it anchors.',
+  },
+  {
+    icon: 'banner',
+    title: 'Outposts and plots',
+    body: 'Expand claim by claim, then lease land to the clansfolk who work it. Borders grow outward from a defended core.',
+  },
+  {
+    icon: 'wheat',
+    title: 'Resources and caravans',
+    body: 'Ore, timber and food move by road. A caravan is worth robbing, which makes it worth escorting.',
+  },
+  {
+    icon: 'sword',
+    title: 'Units and parties',
+    body: 'Raise infantry, archers and cavalry, group them into parties, and march them where the map matters.',
+  },
+  {
+    icon: 'cart',
+    title: 'Sieges',
+    body: 'Gates have hit points and keeps can actually fall. Wars are decided in the world, not in a menu.',
+  },
+  {
+    icon: 'compass',
+    title: 'Successive realms',
+    body: 'A realm is finite and hand-shaped. When it is won, the ledger records it and the next one opens.',
+  },
+] as const;
+
+const faqs = [
+  {
+    q: 'Do I need to install anything?',
+    a: 'Yes — the Contested Realms build. It is the client half of the server plugin, and the server tells you straight away if your version does not match.',
+  },
+  {
+    q: 'Is it free?',
+    a: 'It is free to play. You need a copy of Hytale from the official launcher.',
+  },
+  {
+    q: 'Can I play alone?',
+    a: 'You can live alone, but every system points at other clans. Solo players hold small plots; clans hold realms.',
+  },
+  {
+    q: 'What happens when my stronghold falls?',
+    a: 'Your claim collapses back to whatever you still hold elsewhere. Land changes hands — that is the game, not a punishment.',
+  },
+  {
+    q: 'How often do realms reset?',
+    a: 'They do not reset, they conclude. A won realm is recorded in the ledger and a new one opens beside it.',
+  },
+  {
+    q: 'Can I build anywhere?',
+    a: 'No. Building happens inside claims, and claims come from strongholds and outposts.',
+  },
+];
+---
+
+<Base>
+  <section class="hero">
+    <div class="container">
+      <Crest size={92} class="hero__crest" />
+      <p class="eyebrow">A Hytale server</p>
+      <h1>Claim the realm.<br /><em>Hold the line.</em></h1>
+      <p class="lede">
+        Raise a clan, plant your stronghold, work the land — then defend it when
+        the banners come over the ridge. Every border on the map was drawn by a
+        player, and every one of them can move.
+      </p>
+
+      <div class="btn-row">
+        <a class="btn btn--primary" href="#play">Start playing</a>
+        {site.discordInvite ? (
+          <a class="btn" href={site.discordInvite} rel="noopener">Join the Discord</a>
+        ) : (
+          <a class="btn" href="/news/">Read the news</a>
+        )}
+      </div>
+
+      <ul class="facts">
+        <li>Finite realms</li>
+        <li>Clan warfare</li>
+        <li>Persistent claims</li>
+      </ul>
+    </div>
+  </section>
+
+  <section class="section section--lined">
+    <div class="container">
+      <div class="pillars">
+        <div class="pillar">
+          <span class="pillar__num">I</span>
+          <h3>Claim</h3>
+          <p>
+            Found a clan and place a stronghold. Every later claim hangs off that
+            one building, so where you put it is the first real decision of a
+            realm.
+          </p>
+        </div>
+        <div class="pillar">
+          <span class="pillar__num">II</span>
+          <h3>Build</h3>
+          <p>
+            Work the land for ore, timber and food. Outposts widen your reach and
+            plots let people live inside your borders.
+          </p>
+        </div>
+        <div class="pillar">
+          <span class="pillar__num">III</span>
+          <h3>Besiege</h3>
+          <p>
+            When claims collide, the map settles it. Muster parties, batter the
+            gate, take the keep — territory changes hands for real.
+          </p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="section section--lined" id="features">
+    <div class="container">
+      <div class="section__head">
+        <p class="eyebrow">What you are fighting over</p>
+        <h2>A territory game, not a survival sandbox</h2>
+        <p>
+          The wilderness is there to be taken. Each realm is a hand-shaped arena —
+          a safe neutral heart, four resource regions worth contesting, and a hard
+          edge so the map feels like a place.
+        </p>
+      </div>
+
+      <div class="cards">
+        {features.map((f) => (
+          <article class="card">
+            <Icon name={f.icon} class="card__icon" />
+            <h3>{f.title}</h3>
+            <p>{f.body}</p>
+          </article>
+        ))}
+      </div>
+    </div>
+  </section>
+
+  <section class="section section--lined" id="play">
+    <div class="container">
+      <div class="section__head">
+        <p class="eyebrow">Getting in</p>
+        <h2>Three steps to your first claim</h2>
+      </div>
+
+      <ol class="steps">
+        <li class="step">
+          <h3>Own Hytale</h3>
+          <p>
+            Contested Realms runs as a server plugin, so the only client you need
+            is the game itself from the official launcher.
+          </p>
+        </li>
+        <li class="step">
+          <h3>Install the build</h3>
+          <p>
+            Drop the latest release into your mods folder.
+            <a href={site.releases} rel="noopener">Download the current build</a>.
+          </p>
+        </li>
+        <li class="step">
+          <h3>Connect</h3>
+          {site.serverAddress ? (
+            <>
+              <p>Add the server to your list and join the Hub.</p>
+              <span class="address">{site.serverAddress}</span>
+            </>
+          ) : (
+            <p>
+              The current server address is posted in the community before each
+              realm opens.
+            </p>
+          )}
+        </li>
+      </ol>
+    </div>
+  </section>
+
+  {posts.length > 0 && (
+    <section class="section section--lined">
+      <div class="container">
+        <div class="section__head">
+          <p class="eyebrow">Dispatches</p>
+          <h2>News from the realm</h2>
+        </div>
+
+        <div class="news-list">
+          {posts.map((post) => (
+            <a class="news-item" href={`/news/${post.id}/`}>
+              <time datetime={post.data.date.toISOString()}>
+                {post.data.date.toLocaleDateString('en-GB', {
+                  day: 'numeric',
+                  month: 'short',
+                  year: 'numeric',
+                })}
+              </time>
+              <div>
+                <span class="tag">{post.data.tag}</span>
+                <h3>{post.data.title}</h3>
+                <p>{post.data.summary}</p>
+              </div>
+            </a>
+          ))}
+        </div>
+      </div>
+    </section>
+  )}
+
+  <section class="section section--lined" id="faq">
+    <div class="container">
+      <div class="section__head">
+        <p class="eyebrow">Questions</p>
+        <h2>Before you march</h2>
+      </div>
+
+      <div class="faq">
+        {faqs.map((item) => (
+          <details>
+            <summary>{item.q}</summary>
+            <p>{item.a}</p>
+          </details>
+        ))}
+      </div>
+    </div>
+  </section>
+
+  <section class="section section--lined">
+    <div class="container center">
+      <h2>The next realm opens soon</h2>
+      <p class="lede">
+        Claim a corner of it before someone else does. Bring a clan, or come alone
+        and find one worth swearing to.
+      </p>
+      <div class="btn-row" style="justify-content:center">
+        <a class="btn btn--primary" href={site.releases} rel="noopener">Download the build</a>
+        {site.discordInvite && (
+          <a class="btn" href={site.discordInvite} rel="noopener">Join the Discord</a>
+        )}
+      </div>
+    </div>
+  </section>
+</Base>

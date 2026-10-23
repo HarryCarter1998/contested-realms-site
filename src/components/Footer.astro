@@ -1,0 +1,106 @@
+---
+import Crest from './Crest.astro';
+import { site } from '../config/site';
+
+const year = new Date().getFullYear();
+---
+
+<footer class="site-footer">
+  <div class="container site-footer__inner">
+    <div class="site-footer__brand">
+      <div class="site-footer__mark">
+        <Crest size={26} />
+        <span>{site.name}</span>
+      </div>
+      <p>{site.tagline}.</p>
+    </div>
+
+    <nav class="site-footer__links" aria-label="Elsewhere">
+      <a href={site.releases} rel="noopener">Releases</a>
+      <a href={site.github} rel="noopener">Source</a>
+      {site.discordInvite && <a href={site.discordInvite} rel="noopener">Discord</a>}
+      <a href="/news/">News</a>
+    </nav>
+
+    <div class="site-footer__legal">
+      <p>
+        <a href={`mailto:${site.contactEmail}`}>{site.contactEmail}</a>
+      </p>
+      <p class="muted">
+        &copy; {year} {site.name}. Not affiliated with Hypixel Studios or Riot Games.
+      </p>
+    </div>
+  </div>
+</footer>
+
+<style>
+  .site-footer {
+    margin-top: clamp(3rem, 6vw, 5rem);
+    border-top: 1px solid var(--hairline);
+    padding-block: 3rem 3.5rem;
+    font-size: 0.88rem;
+  }
+
+  .site-footer__inner {
+    display: grid;
+    grid-template-columns: 1.4fr 1fr 1.2fr;
+    gap: 2rem clamp(1.5rem, 4vw, 4rem);
+  }
+
+  .site-footer__mark {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.6rem;
+    font-family: var(--font-display);
+    letter-spacing: 0.06em;
+    color: var(--gold);
+    margin-bottom: 0.5rem;
+  }
+
+  .site-footer__brand p {
+    margin: 0;
+    color: var(--text-muted);
+    max-width: 30ch;
+  }
+
+  .site-footer__links {
+    display: grid;
+    gap: 0.5rem;
+    align-content: start;
+  }
+
+  .site-footer__links a {
+    color: var(--text-muted);
+    text-decoration: none;
+  }
+
+  .site-footer__links a:hover {
+    color: var(--gold-bright);
+  }
+
+  .site-footer__legal {
+    justify-self: end;
+    text-align: right;
+  }
+
+  .site-footer__legal p {
+    margin: 0 0 0.6rem;
+  }
+
+  .site-footer__legal .muted {
+    max-width: 34ch;
+    font-size: 0.8rem;
+    line-height: 1.55;
+  }
+
+  @media (max-width: 760px) {
+    .site-footer__inner {
+      grid-template-columns: 1fr;
+    }
+
+    .site-footer__legal {
+      justify-self: start;
+      text-align: left;
+    }
+  }
+</style>

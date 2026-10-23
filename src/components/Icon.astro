@@ -1,0 +1,37 @@
+---
+interface Props {
+  name: 'keep' | 'banner' | 'wheat' | 'cart' | 'sword' | 'compass';
+  size?: number;
+  class?: string;
+}
+
+const { name, size = 22, class: className = '' } = Astro.props;
+
+const icons: Record<string, string> = {
+  keep: '<path d="M4 21V9l4-2V4h3v3h2V4h3v3l4 2v12H4Z"/><path d="M10 21v-5h4v5"/>',
+  banner:
+    '<path d="M6 21V3"/><path d="M6 4h11l-2.5 3.5L17 11H6"/><path d="M3 21h7"/>',
+  wheat:
+    '<path d="M12 21V9"/><path d="M12 9c0-2 1.5-3.5 3.5-3.5C15.5 7.5 14 9 12 9Z"/><path d="M12 9C12 7 10.5 5.5 8.5 5.5 8.5 7.5 10 9 12 9Z"/><path d="M12 14c0-2 1.5-3.5 3.5-3.5C15.5 12.5 14 14 12 14Z"/><path d="M12 14c0-2-1.5-3.5-3.5-3.5C8.5 12.5 10 14 12 14Z"/>',
+  cart:
+    '<path d="M3 7h2l2 9h10l2-6H7"/><circle cx="9" cy="19" r="1.6"/><circle cx="17" cy="19" r="1.6"/>',
+  sword:
+    '<path d="M12 3v13"/><path d="M8.5 8.5h7"/><path d="M9.5 16h5"/><path d="M12 16v4"/>',
+  compass:
+    '<circle cx="12" cy="12" r="9"/><path d="M15.5 8.5l-2 5-5 2 2-5 5-2Z"/>',
+};
+---
+
+<svg
+  class={className}
+  width={size}
+  height={size}
+  viewBox="0 0 24 24"
+  fill="none"
+  stroke="currentColor"
+  stroke-width="1.6"
+  stroke-linecap="round"
+  stroke-linejoin="round"
+  aria-hidden="true"
+  set:html={icons[name]}
+/>
