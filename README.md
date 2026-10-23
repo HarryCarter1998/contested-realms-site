@@ -67,9 +67,9 @@ node scripts/configure-dns.mjs --credentials
 ```
 
 They are validated against Porkbun before anything is saved, then written to
-`.env` in this checkout (mode 600, gitignored). Add `--global` to store them in
-`~/.config/contested-realms/porkbun.env` instead. Read order is
-`$PORKBUN_ENV`, `./.env`, then the global file.
+`.env.local` in this checkout (mode 600, gitignored). Add `--global` to store
+them in `~/.config/contested-realms/porkbun.env` instead. Read order is
+`$PORKBUN_ENV`, `./.env.local`, then the global file.
 
 The script refuses to run if the file it would use is tracked by git — this
 repository is public, and the key is account-wide.

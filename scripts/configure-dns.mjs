@@ -35,12 +35,12 @@ const MANAGED_NAMES = new Set(['', 'www']);
 const ADDRESS_TYPES = new Set(['A', 'AAAA', 'CNAME', 'ALIAS']);
 
 const CONFIG_FILE = join(homedir(), '.config', 'contested-realms', 'porkbun.env');
-const LOCAL_FILE = join(process.cwd(), '.env');
+const LOCAL_FILE = join(process.cwd(), '.env.local');
 
 /**
  * Where keys are read from, in order:
  *   1. $PORKBUN_ENV
- *   2. ./.env in the site checkout (the familiar place)
+ *   2. ./.env.local in the site checkout (the familiar place)
  *   3. ~/.config/contested-realms/porkbun.env
  */
 function credentialsFile() {
