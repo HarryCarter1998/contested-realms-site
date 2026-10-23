@@ -33,13 +33,12 @@ const WWW_TARGET = 'harrycarter1998.github.io';
 const MANAGED_NAMES = new Set(['', 'www']);
 const ADDRESS_TYPES = new Set(['A', 'AAAA', 'CNAME', 'ALIAS']);
 
-const apply = process.argv.includes('--apply');
-const credentialsFile = join(homedir(), '.config', 'contested-realms', 'porkbun.env');
+const CREDENTIALS_FILE = join(homedir(), '.config', 'contested-realms', 'porkbun.env');
 
 function loadCredentials() {
   const env = { ...process.env };
   try {
-    for (const line of readFileSync(credentialsFile, 'utf8').split('\n')) {
+    for (const line of readFileSync(CREDENTIALS_FILE, 'utf8').split('\n')) {
       const match = line.match(/^\s*([A-Z_]+)\s*=\s*(.*?)\s*$/);
       if (match && !env[match[1]]) {
         env[match[1]] = match[2].replace(/^["']|["']$/g, '');
@@ -53,27 +52,12 @@ function loadCredentials() {
   const missing = required.filter((name) => !env[name] || env[name].startsWith('PASTE_'));
   if (missing.length > 0) {
     throw new Error(
-      `${missing.join(' and ')} not set in ${credentialsFile}.\n` +
+      `${missing.join(' and ')} ${missing.length > 1 ? 'are' : 'is'} not set in ${CREDENTIALS_FILE}.\n` +
         'Porkbun needs both values: the API Key and the Secret API Key.',
     );
   }
 
   return { apikey: env.PORKBUN_API_KEY, secretapikey: env.PORKBUN_SECRET_API_KEY };
-}
-
-const credentials = loadCredentials();
-
-async function call(path, body = {}) {
-  const response = await fetch(`${API}${path}`, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ ...credentials, ...body }),
-  });
-  const json = await response.json();
-  if (json.status !== 'SUCCESS') {
-    throw new Error(`${path} failed: ${json.message ?? JSON.stringify(json)}`);
-  }
-  return json;
 }
 
 const nameOf = (record) => record.name ?? '';
@@ -86,61 +70,81 @@ const wanted = [
 ];
 const wantedKeys = new Set(wanted.map(key));
 
-await call('/ping');
+async function main() {
+  const apply = process.argv.includes('--apply');
+  const credentials = loadCredentials();
 
-const { records = [] } = await call(`/dns/retrieve/${DOMAIN}`);
+  const call = async (path, body = {}) => {
+    const response = await fetch(`${API}${path}`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ ...credentials, ...body }),
+    });
+    const json = await response.json();
+    if (json.status !== 'SUCCESS') {
+      throw new Error(`${path} failed: ${json.message ?? JSON.stringify(json)}`);
+    }
+    return json;
+  };
 
-const managed = records.filter(
-  (record) => MANAGED_NAMES.has(nameOf(record)) && ADDRESS_TYPES.has(record.type),
-);
+  await call('/ping');
 
-// Anything on apex/www that is not exactly what we want gets removed, so stale
-// parking records cannot linger next to the new ones.
-const deletes = managed.filter((record) => !wantedKeys.has(key(record)));
-const creates = wanted.filter((record) => !records.some((r) => key(r) === key(record)));
+  const { records = [] } = await call(`/dns/retrieve/${DOMAIN}`);
 
-const mailRecords = records.filter((record) => record.type === 'MX');
-const untouched = records.filter(
-  (record) => !deletes.includes(record) && !creates.some((c) => key(c) === key(record)),
-);
-
-console.log(`Domain: ${DOMAIN}   mode: ${apply ? 'APPLY' : 'dry run'}\n`);
-
-console.log(`Removing ${deletes.length} address record(s) on apex/www:`);
-for (const record of deletes) {
-  console.log(`  - ${record.type.padEnd(6)} ${(nameOf(record) || '@').padEnd(6)} ${record.content}`);
-}
-
-console.log(`\nEnsuring ${creates.length} GitHub Pages record(s):`);
-for (const record of creates) {
-  console.log(`  + ${record.type.padEnd(6)} ${(record.name || '@').padEnd(6)} ${record.content}`);
-}
-
-console.log(`\nLeaving ${untouched.length} other record(s) alone (MX, TXT, SRV, NS, subdomains).`);
-if (mailRecords.length === 0) {
-  console.log(
-    '\nWARNING: no MX records found. Porkbun email forwarding looks unconfigured —' +
-      ` mail to @${DOMAIN} will not be delivered.`,
+  const managed = records.filter(
+    (record) => MANAGED_NAMES.has(nameOf(record)) && ADDRESS_TYPES.has(record.type),
   );
-} else {
-  console.log(`Mail is intact: ${mailRecords.map((r) => r.content).join(', ')}`);
+
+  // Anything on apex/www that is not exactly what we want gets removed, so
+  // stale parking records cannot linger next to the new ones.
+  const deletes = managed.filter((record) => !wantedKeys.has(key(record)));
+  const creates = wanted.filter((record) => !records.some((r) => key(r) === key(record)));
+
+  const mailRecords = records.filter((record) => record.type === 'MX');
+  const untouched = records.filter(
+    (record) => !deletes.includes(record) && !creates.some((c) => key(c) === key(record)),
+  );
+
+  console.log(`Domain: ${DOMAIN}   mode: ${apply ? 'APPLY' : 'dry run'}\n`);
+
+  console.log(`Removing ${deletes.length} address record(s) on apex/www:`);
+  for (const record of deletes) {
+    console.log(`  - ${record.type.padEnd(6)} ${(nameOf(record) || '@').padEnd(6)} ${record.content}`);
+  }
+
+  console.log(`\nEnsuring ${creates.length} GitHub Pages record(s):`);
+  for (const record of creates) {
+    console.log(`  + ${record.type.padEnd(6)} ${(record.name || '@').padEnd(6)} ${record.content}`);
+  }
+
+  console.log(`\nLeaving ${untouched.length} other record(s) alone (MX, TXT, SRV, NS, subdomains).`);
+  if (mailRecords.length === 0) {
+    console.log(
+      `\nWARNING: no MX records found. Mail to @${DOMAIN} will not be delivered.`,
+    );
+  } else {
+    console.log(`Mail is intact: ${mailRecords.map((r) => r.content).join(', ')}`);
+  }
+
+  if (!apply) {
+    console.log('\nNothing changed. Re-run with --apply to write these records.');
+    return;
+  }
+
+  for (const record of deletes) {
+    await call(`/dns/delete/${DOMAIN}/${record.id}`);
+    console.log(`deleted ${record.type} ${nameOf(record) || '@'} ${record.content}`);
+  }
+
+  for (const record of creates) {
+    await call(`/dns/create/${DOMAIN}`, { ...record, ttl: '600' });
+    console.log(`created ${record.type} ${record.name || '@'} ${record.content}`);
+  }
+
+  console.log('\nDone. DNS propagates within the 600s TTL.');
 }
 
-console.log(`\nFinal apex/www address records after the run: ${wanted.length}.`);
-
-if (!apply) {
-  console.log('\nNothing changed. Re-run with --apply to write these records.');
-  process.exit(0);
-}
-
-for (const record of deletes) {
-  await call(`/dns/delete/${DOMAIN}/${record.id}`);
-  console.log(`deleted ${record.type} ${nameOf(record) || '@'} ${record.content}`);
-}
-
-for (const record of creates) {
-  await call(`/dns/create/${DOMAIN}`, { ...record, ttl: '600' });
-  console.log(`created ${record.type} ${record.name || '@'} ${record.content}`);
-}
-
-console.log('\nDone. DNS propagates within the 600s TTL.');
+main().catch((error) => {
+  console.error(`\n${error.message}\n`);
+  process.exit(1);
+});
