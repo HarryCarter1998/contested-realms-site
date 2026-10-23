@@ -1,4 +1,5 @@
 ---
+import Crest from './Crest.astro';
 import { site } from '../config/site';
 
 const path = Astro.url.pathname;
@@ -8,7 +9,7 @@ const isHome = path === '/';
 <header class="site-nav">
   <div class="container site-nav__inner">
     <a class="brand" href="/" aria-label={`${site.name} home`}>
-      <span class="brand__mark" aria-hidden="true"></span>
+      <Crest size={25} class="brand__crest" />
       <span class="brand__name">{site.name}</span>
     </a>
 
@@ -55,12 +56,9 @@ const isHome = path === '/';
     color: var(--text);
   }
 
-  .brand__mark {
-    width: 26px;
-    height: 30px;
-    background: linear-gradient(180deg, var(--gold-bright), var(--gold));
-    clip-path: polygon(50% 0%, 100% 12%, 100% 55%, 50% 100%, 0% 55%, 0% 12%);
-    box-shadow: 0 0 18px -6px var(--gold);
+  .brand__crest {
+    color: var(--gold);
+    flex: none;
   }
 
   .brand__name {
