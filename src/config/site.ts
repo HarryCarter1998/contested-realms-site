@@ -18,7 +18,17 @@ export const site = {
   discordInvite: '',
 
   contactEmail: 'hello@contestedrealms.com',
-  github: 'https://github.com/HarryCarter1998/contested-realms',
-  /** Latest release page for the plugin build. */
-  releases: 'https://github.com/HarryCarter1998/contested-realms/releases',
+
+  /**
+   * Public build of the plugin. Leave '' until there is a genuinely public
+   * download location (CurseForge, a public release repo, ...). While empty the
+   * site hides every download call-to-action rather than linking to a private
+   * repository, which is a 404 for every visitor.
+   */
+  downloadUrl: '',
+
+  /**
+   * Public source. Leave '' while the game repository is private.
+   */
+  sourceUrl: '',
 } as const;

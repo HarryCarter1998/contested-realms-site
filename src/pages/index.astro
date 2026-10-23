@@ -42,8 +42,7 @@ const features = [
   },
 ] as const;
 
-const faqs = [
-  {
+const faqs = [  {
     q: 'Do I need to install anything?',
     a: 'Yes — the Contested Realms build. It is the client half of the server plugin, and the server tells you straight away if your version does not match.',
   },
@@ -68,6 +67,14 @@ const faqs = [
     a: 'No. Building happens inside claims, and claims come from strongholds and outposts.',
   },
 ];
+
+// The most useful action available right now. Download only exists when a real
+// public build URL is configured, so the site never links to a private repo.
+const primaryCta = site.downloadUrl
+  ? { href: site.downloadUrl, label: 'Download the build', external: true }
+  : site.discordInvite
+    ? { href: site.discordInvite, label: 'Join the Discord', external: true }
+    : { href: '/news/', label: 'Read the news', external: false };
 ---
 
 <Base>
@@ -172,8 +179,17 @@ const faqs = [
         </li>
         <li class="step">
           <h3>Install the build</h3>
-          <p>Drop the latest release into your mods folder.</p>
-          <p><a href={site.releases} rel="noopener">Download the current build</a></p>
+          {site.downloadUrl ? (
+            <>
+              <p>Drop the latest release into your mods folder.</p>
+              <p><a href={site.downloadUrl} rel="noopener">Download the current build</a></p>
+            </>
+          ) : (
+            <p>
+              The build goes out with each realm announcement, so everyone starts
+              on the same version.
+            </p>
+          )}
         </li>
         <li class="step">
           <h3>Connect</h3>
@@ -249,8 +265,12 @@ const faqs = [
         and find one worth swearing to.
       </p>
       <div class="btn-row" style="justify-content:center">
-        <a class="btn btn--primary" href={site.releases} rel="noopener">Download the build</a>
-        {site.discordInvite && (
+        <a
+          class="btn btn--primary"
+          href={primaryCta.href}
+          rel={primaryCta.external ? 'noopener' : undefined}
+        >{primaryCta.label}</a>
+        {site.discordInvite && primaryCta.href !== site.discordInvite && (
           <a class="btn" href={site.discordInvite} rel="noopener">Join the Discord</a>
         )}
       </div>

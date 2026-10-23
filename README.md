@@ -14,8 +14,10 @@ npm run preview    # serve dist/
 
 ## Where things live
 
-- `src/config/site.ts` — join address, Discord invite, contact email, links.
-  **Every fact on the site comes from here.** Empty string hides the element.
+- `src/config/site.ts` — join address, Discord invite, contact email, download
+  and source links. **Every fact on the site comes from here.** An empty string
+  hides the element, which is why the download button disappears until a public
+  build URL exists (never link to the private game repo — it 404s for visitors).
 - `src/styles/global.css` — palette and layout. Colours mirror
   `src/main/java/ui/UiTheme.java` in the game repo; keep them in sync.
 - `src/pages/index.astro` — landing page copy.

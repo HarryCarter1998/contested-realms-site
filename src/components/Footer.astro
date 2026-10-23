@@ -16,8 +16,8 @@ const year = new Date().getFullYear();
     </div>
 
     <nav class="site-footer__links" aria-label="Elsewhere">
-      <a href={site.releases} rel="noopener">Releases</a>
-      <a href={site.github} rel="noopener">Source</a>
+      {site.downloadUrl && <a href={site.downloadUrl} rel="noopener">Download</a>}
+      {site.sourceUrl && <a href={site.sourceUrl} rel="noopener">Source</a>}
       {site.discordInvite && <a href={site.discordInvite} rel="noopener">Discord</a>}
       <a href="/news/">News</a>
     </nav>
