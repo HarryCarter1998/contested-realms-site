@@ -34,6 +34,16 @@ const WWW_TARGET = 'harrycarter1998.github.io';
 const MANAGED_NAMES = new Set(['', 'www']);
 const ADDRESS_TYPES = new Set(['A', 'AAAA', 'CNAME', 'ALIAS']);
 
+/** Porkbun returns record names as FQDNs; compare in relative form. */
+function relativeName(record) {
+  const name = record.name ?? '';
+  if (name === DOMAIN) return '';
+  if (name.endsWith(`.${DOMAIN}`)) return name.slice(0, -(DOMAIN.length + 1));
+  return name;
+}
+
+const isParkingHost = (record) => /porkbun\.(com|net)$/i.test(record.content);
+
 const CONFIG_FILE = join(homedir(), '.config', 'contested-realms', 'porkbun.env');
 const LOCAL_FILE = join(process.cwd(), '.env.local');
 
@@ -193,8 +203,8 @@ function loadCredentials() {
   return { apikey: env.PORKBUN_API_KEY, secretapikey: env.PORKBUN_SECRET_API_KEY };
 }
 
-const nameOf = (record) => record.name ?? '';
-const key = (record) => `${record.type}|${nameOf(record)}|${record.content}`;
+const nameOf = relativeName;
+const key = (record) => `${record.type}|${relativeName(record)}|${record.content}`;
 
 const wanted = [
   ...APEX_A.map((content) => ({ name: '', type: 'A', content })),
@@ -230,7 +240,11 @@ async function main() {
   const { records = [] } = await call(`/dns/retrieve/${DOMAIN}`);
 
   const managed = records.filter(
-    (record) => MANAGED_NAMES.has(nameOf(record)) && ADDRESS_TYPES.has(record.type),
+    (record) =>
+      ADDRESS_TYPES.has(record.type) &&
+      (MANAGED_NAMES.has(relativeName(record)) ||
+        // Porkbun parks every unknown subdomain behind a wildcard; drop that too.
+        (relativeName(record) === '*' && isParkingHost(record))),
   );
 
   // Anything on apex/www that is not exactly what we want gets removed, so
