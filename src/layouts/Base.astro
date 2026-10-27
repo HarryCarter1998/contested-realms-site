@@ -11,15 +11,43 @@ import { site } from '../config/site';
 interface Props {
   title?: string;
   description?: string;
+  /** Path under public/ for the share card. Defaults to the site-wide card. */
+  image?: string;
+  /** Set for news posts so share cards and search engines treat them as articles. */
+  published?: Date;
+  noindex?: boolean;
 }
 
 const {
   title = `${site.name} — ${site.tagline}`,
   description = site.description,
+  image = '/img/og-card.jpg',
+  published,
+  noindex = false,
 } = Astro.props;
 
 const canonical = new URL(Astro.url.pathname, site.url).href;
 const ogTitle = title.includes(site.name) ? title : `${title} — ${site.name}`;
+const ogImage = new URL(image, site.url).href;
+
+const jsonLd = published
+  ? {
+      '@context': 'https://schema.org',
+      '@type': 'NewsArticle',
+      headline: title,
+      description,
+      datePublished: published.toISOString(),
+      image: ogImage,
+      url: canonical,
+      publisher: { '@type': 'Organization', name: site.name, url: site.url },
+    }
+  : {
+      '@context': 'https://schema.org',
+      '@type': 'WebSite',
+      name: site.name,
+      url: site.url,
+      description: site.description,
+    };
 ---
 
 <!doctype html>
@@ -32,24 +60,25 @@ const ogTitle = title.includes(site.name) ? title : `${title} — ${site.name}`;
     <link rel="canonical" href={canonical} />
     <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
     <link rel="sitemap" href="/sitemap-index.xml" />
+    <link rel="alternate" type="application/rss+xml" title={`${site.name} news`} href="/rss.xml" />
     <meta name="theme-color" content="#0c0806" />
+    {noindex && <meta name="robots" content="noindex" />}
 
-    <meta property="og:type" content="website" />
+    <meta property="og:type" content={published ? 'article' : 'website'} />
     <meta property="og:site_name" content={site.name} />
     <meta property="og:title" content={ogTitle} />
     <meta property="og:description" content={description} />
     <meta property="og:url" content={canonical} />
+    <meta property="og:image" content={ogImage} />
+    <meta property="og:image:width" content="1200" />
+    <meta property="og:image:height" content="630" />
+    {published && <meta property="article:published_time" content={published.toISOString()} />}
     <meta name="twitter:card" content="summary_large_image" />
     <meta name="twitter:title" content={ogTitle} />
     <meta name="twitter:description" content={description} />
+    <meta name="twitter:image" content={ogImage} />
 
-    <script type="application/ld+json" set:html={JSON.stringify({
-      '@context': 'https://schema.org',
-      '@type': 'WebSite',
-      name: site.name,
-      url: site.url,
-      description: site.description,
-    })} />
+    <script type="application/ld+json" set:html={JSON.stringify(jsonLd)} />
   </head>
   <body>
     <a class="skip" href="#main">Skip to content</a>

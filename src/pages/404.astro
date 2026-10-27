@@ -1,0 +1,22 @@
+---
+import Base from '../layouts/Base.astro';
+import Crest from '../components/Crest.astro';
+---
+
+<Base title="Page not found" description="This page is outside the realm's borders." noindex>
+  <section class="section">
+    <div class="container center">
+      <Crest size={64} class="hero__crest" />
+      <p class="eyebrow">404</p>
+      <h1 class="page-title">Beyond the border</h1>
+      <p class="lede">
+        There is nothing claimed at this address. The page may have moved, or the
+        link was wrong.
+      </p>
+      <div class="btn-row btn-row--center">
+        <a class="btn btn--primary" href="/">Back to the home page</a>
+        <a class="btn" href="/news/">Read the news</a>
+      </div>
+    </div>
+  </section>
+</Base>

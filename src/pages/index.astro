@@ -9,6 +9,31 @@ const posts = (await getCollection('news', ({ data }) => !data.draft))
   .sort((a, b) => b.data.date.valueOf() - a.data.date.valueOf())
   .slice(0, 3);
 
+// Images are renders of the game's own prefabs (scripts/render-build.py in the game repo).
+const pillars = [
+  {
+    num: 'I',
+    title: 'Claim',
+    body: 'Found a clan and place a stronghold. Every later claim hangs off that one building, so where you put it is the first real decision of a realm.',
+    img: '/img/pillar-claim-stronghold.webp',
+    alt: 'A walled stronghold seen from above, with buildings and a watchtower behind the wall.',
+  },
+  {
+    num: 'II',
+    title: 'Build',
+    body: 'Work the land for ore, timber and food. Outposts widen your reach and plots let people live inside your borders.',
+    img: '/img/pillar-build-warehouse-t3.webp',
+    alt: 'A tier 3 warehouse: a timber-framed hall with a red tiled roof on a stone base.',
+  },
+  {
+    num: 'III',
+    title: 'Besiege',
+    body: 'When claims collide, the map settles it. Muster parties, batter the gate, take the keep — territory changes hands for real.',
+    img: '/img/pillar-besiege-gate-t4.webp',
+    alt: 'A tier 4 stone gatehouse with crenellations and steps up to the wall walk.',
+  },
+] as const;
+
 const features = [
   {
     icon: 'keep',
@@ -38,13 +63,14 @@ const features = [
   {
     icon: 'compass',
     title: 'Successive realms',
-    body: 'A realm is finite and hand-shaped. When it is won, the ledger records it and the next one opens.',
+    body: 'Each realm is a finite, hand-shaped map ringed by ocean. When one is settled, the next one opens beside it.',
   },
 ] as const;
 
-const faqs = [  {
+const faqs = [
+  {
     q: 'Do I need to install anything?',
-    a: 'Yes — the Contested Realms build. It is the client half of the server plugin, and the server tells you straight away if your version does not match.',
+    a: 'Only Hytale. Contested Realms runs on the server, and your client downloads its asset pack when you join.',
   },
   {
     q: 'Is it free?',
@@ -60,7 +86,7 @@ const faqs = [  {
   },
   {
     q: 'How often do realms reset?',
-    a: 'They do not reset, they conclude. A won realm is recorded in the ledger and a new one opens beside it.',
+    a: 'They do not reset, they conclude. A settled realm stays settled and a new one opens beside it.',
   },
   {
     q: 'Can I build anywhere?',
@@ -103,37 +129,31 @@ const primaryCta = site.downloadUrl
         <li>Clan warfare</li>
         <li>Persistent claims</li>
       </ul>
+
+      <figure class="showcase">
+        <img
+          src="/img/stronghold-tier3-iso.webp"
+          width="1600"
+          height="900"
+          alt="A tier 3 stronghold: a stone curtain wall with a gatehouse and corner turrets, and a warehouse, armory, stables, barracks, forge and watchtower inside."
+          fetchpriority="high"
+        />
+        <figcaption>A tier 3 stronghold, rendered from the server's own building files.</figcaption>
+      </figure>
     </div>
   </section>
 
   <section class="section section--lined">
     <div class="container">
       <div class="pillars">
-        <div class="pillar">
-          <span class="pillar__num">I</span>
-          <h3>Claim</h3>
-          <p>
-            Found a clan and place a stronghold. Every later claim hangs off that
-            one building, so where you put it is the first real decision of a
-            realm.
-          </p>
-        </div>
-        <div class="pillar">
-          <span class="pillar__num">II</span>
-          <h3>Build</h3>
-          <p>
-            Work the land for ore, timber and food. Outposts widen your reach and
-            plots let people live inside your borders.
-          </p>
-        </div>
-        <div class="pillar">
-          <span class="pillar__num">III</span>
-          <h3>Besiege</h3>
-          <p>
-            When claims collide, the map settles it. Muster parties, batter the
-            gate, take the keep — territory changes hands for real.
-          </p>
-        </div>
+        {pillars.map((p) => (
+          <div class="pillar">
+            <img class="pillar__img" src={p.img} width="800" height="600" alt={p.alt} loading="lazy" />
+            <span class="pillar__num">{p.num}</span>
+            <h3>{p.title}</h3>
+            <p>{p.body}</p>
+          </div>
+        ))}
       </div>
     </div>
   </section>
@@ -178,32 +198,29 @@ const primaryCta = site.downloadUrl
           </p>
         </li>
         <li class="step">
-          <h3>Install the build</h3>
-          {site.downloadUrl ? (
-            <>
-              <p>Drop the latest release into your mods folder.</p>
-              <p><a href={site.downloadUrl} rel="noopener">Download the current build</a></p>
-            </>
-          ) : (
-            <p>
-              The build goes out with each realm announcement, so everyone starts
-              on the same version.
-            </p>
-          )}
-        </li>
-        <li class="step">
           <h3>Connect</h3>
           {site.serverAddress ? (
             <>
-              <p>Add the server to your list and join the Hub.</p>
+              <p>
+                Add the server to your list and join. Your client fetches the
+                server's assets on the way in.
+              </p>
               <span class="address">{site.serverAddress}</span>
             </>
           ) : (
             <p>
-              The current server address is posted in the community before each
-              realm opens.
+              The server address is posted here and in the community before each
+              realm opens. Your client fetches the server's assets on the way in.
             </p>
           )}
+        </li>
+        <li class="step">
+          <h3>Pick a realm</h3>
+          <p>
+            You arrive in the Menu. Open <strong>Realms</strong> to join one, then
+            found a clan or swear to an existing one. Press Tab to bring the menu
+            back at any time.
+          </p>
         </li>
       </ol>
     </div>
@@ -264,7 +281,7 @@ const primaryCta = site.downloadUrl
         Claim a corner of it before someone else does. Bring a clan, or come alone
         and find one worth swearing to.
       </p>
-      <div class="btn-row" style="justify-content:center">
+      <div class="btn-row btn-row--center">
         <a
           class="btn btn--primary"
           href={primaryCta.href}

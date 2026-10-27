@@ -22,22 +22,29 @@ const published = post.data.date.toLocaleDateString('en-GB', {
 });
 ---
 
-<Base title={post.data.title} description={post.data.summary}>
+<Base title={post.data.title} description={post.data.summary} published={post.data.date}>
   <article class="section">
     <div class="container">
       <p class="eyebrow">
-        <a href="/news/" style="color:inherit;text-decoration:none">&larr; News</a>
+        <a href="/news/" class="back-link">&larr; News</a>
       </p>
-      <h1 style="font-size:clamp(1.9rem,4.5vw,2.8rem);max-width:24ch">{post.data.title}</h1>
-      <p class="muted" style="font-size:0.85rem;letter-spacing:0.08em;text-transform:uppercase">
-        {published} · {post.data.tag}
+      <h1 class="post-title">{post.data.title}</h1>
+      <p class="post-meta">
+        <time datetime={post.data.date.toISOString()}>{published}</time> · {post.data.tag}
       </p>
 
-      <hr class="divider" style="margin:2rem 0" />
+      <hr class="divider post-divider" />
 
       <div class="prose">
         <Content />
       </div>
+
+      <hr class="divider post-divider" />
+
+      <p class="post-foot">
+        <a href="/news/">&larr; All news</a>
+        <a href="/rss.xml">Follow by RSS</a>
+      </p>
     </div>
   </article>
 </Base>

@@ -15,8 +15,11 @@ const format = (d: Date) =>
     <div class="container">
       <div class="section__head">
         <p class="eyebrow">Dispatches</p>
-        <h1 style="font-size:clamp(2rem,5vw,3rem)">News</h1>
-        <p>Patches, realm openings and design notes.</p>
+        <h1 class="page-title">News</h1>
+        <p>
+          Patches, realm openings and design notes. Follow along with the
+          <a href="/rss.xml">RSS feed</a>.
+        </p>
       </div>
 
       {posts.length === 0 ? (
@@ -28,7 +31,7 @@ const format = (d: Date) =>
               <time datetime={post.data.date.toISOString()}>{format(post.data.date)}</time>
               <div>
                 <span class="tag">{post.data.tag}</span>
-                <h2 style="font-size:1.05rem;margin:0 0 0.2rem">{post.data.title}</h2>
+                <h2 class="news-item__title">{post.data.title}</h2>
                 <p>{post.data.summary}</p>
               </div>
             </a>

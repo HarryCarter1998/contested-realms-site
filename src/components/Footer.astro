@@ -20,6 +20,7 @@ const year = new Date().getFullYear();
       {site.sourceUrl && <a href={site.sourceUrl} rel="noopener">Source</a>}
       {site.discordInvite && <a href={site.discordInvite} rel="noopener">Discord</a>}
       <a href="/news/">News</a>
+      <a href="/rss.xml">RSS feed</a>
     </nav>
 
     <div class="site-footer__legal">
@@ -27,7 +28,7 @@ const year = new Date().getFullYear();
         <a href={`mailto:${site.contactEmail}`}>{site.contactEmail}</a>
       </p>
       <p class="muted">
-        &copy; {year} {site.name}. Not affiliated with Hypixel Studios or Riot Games.
+        &copy; {year} {site.name}. Not affiliated with Hypixel Studios.
       </p>
     </div>
   </div>
